@@ -1,0 +1,28 @@
+# Production values for universal-store.
+# Use this with -f values-prod.yaml
+
+ingress:
+  enabled: true
+  className: "traefik" # Default for k3s
+  host: "store.example.com" # Change this to real domain
+
+persistence:
+  enabled: true
+  storageClass: "local-path" # Default for k3s
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+
+woocommerce:
+  db:
+    rootPassword: "CHANGE_ME_IN_PROD"
+    password: "CHANGE_ME_IN_PROD"
+
+medusa:
+  postgres:
+    password: "CHANGE_ME_IN_PROD"

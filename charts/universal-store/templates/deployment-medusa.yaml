@@ -1,0 +1,53 @@
+{{- if eq .Values.store.engine "medusa" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.store.name }}-medusa
+  labels:
+    app: {{ .Values.store.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.store.name }}
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.store.name }}
+        tier: frontend
+    spec:
+      containers:
+        - name: medusa
+          image: {{ .Values.medusa.image }}
+          env:
+            - name: DATABASE_TYPE
+              value: "postgres"
+            - name: REDIS_URL
+              value: "redis://localhost:6379"
+            - name: DATABASE_URL
+              value: "postgres://postgres:{{ .Values.medusa.postgres.password }}@localhost:5432/medusa"
+          ports:
+            - containerPort: 9000
+              name: medusa
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+        - name: postgres
+          image: {{ .Values.medusa.postgres.image }}
+          env:
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.medusa.postgres.password }}
+            - name: POSTGRES_DB
+              value: medusa
+          ports:
+            - containerPort: 5432
+        - name: redis
+          image: {{ .Values.medusa.redis.image }}
+          ports:
+            - containerPort: 6379
+{{- end }}

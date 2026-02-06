@@ -1,0 +1,44 @@
+# Default values for universal-store.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+store:
+  name: my-store
+  engine: woocommerce # or medusa
+
+ingress:
+  enabled: true
+  className: "nginx"
+  host: "store.local"
+
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: "standard" # Change to 'local-path' or similar for Kind/k3s if needed
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1024Mi
+
+# WooCommerce Specifics
+woocommerce:
+  image: wordpress:6.4-php8.1-apache
+  db:
+    image: mariadb:10.6
+    rootPassword: "somesecretpassword" # In prod, use secrets!
+    name: wordpress
+    user: wordpress
+    password: wordpress_password
+
+# Medusa Specifics
+medusa:
+  image: medusajs/medusa-starter-default:latest
+  redis:
+    image: redis:6-alpine
+  postgres:
+    image: postgres:14-alpine
+    password: postgres_password

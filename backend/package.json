@@ -1,0 +1,19 @@
+{
+  "name": "store-orchestrator",
+  "version": "1.0.0",
+  "description": "Backend for Store Provisioning Platform",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

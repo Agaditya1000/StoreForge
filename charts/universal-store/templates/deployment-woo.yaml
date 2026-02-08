@@ -17,40 +17,104 @@ spec:
         app: {{ .Values.store.name }}
         tier: frontend
     spec:
+      initContainers:
+        - name: volume-permissions
+          image: busybox
+          command: ["sh", "-c", "chown -R 999:999 /var/lib/mysql"]
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/mysql
       containers:
-        - name: wordpress
-          image: {{ .Values.woocommerce.image }}
-          env:
-            - name: WORDPRESS_DB_HOST
-              value: 127.0.0.1
-            - name: WORDPRESS_DB_USER
-              value: {{ .Values.woocommerce.db.user }}
-            - name: WORDPRESS_DB_PASSWORD
-              value: {{ .Values.woocommerce.db.password }}
-            - name: WORDPRESS_DB_NAME
-              value: {{ .Values.woocommerce.db.name }}
-          ports:
-            - containerPort: 80
-              name: wordpress
-          resources:
-            requests:
-              cpu: {{ .Values.resources.requests.cpu }}
-              memory: {{ .Values.resources.requests.memory }}
-            limits:
-              cpu: {{ .Values.resources.limits.cpu }}
-              memory: {{ .Values.resources.limits.memory }}
-        - name: mariadb
-          image: {{ .Values.woocommerce.db.image }}
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: {{ .Values.woocommerce.db.rootPassword }}
-            - name: MYSQL_USER
-              value: {{ .Values.woocommerce.db.user }}
-            - name: MYSQL_PASSWORD
-              value: {{ .Values.woocommerce.db.password }}
-            - name: MYSQL_DATABASE
-              value: {{ .Values.woocommerce.db.name }}
-          ports:
-            - containerPort: 3306
-              name: db
+          - name: wordpress
+            image: {{ .Values.woocommerce.image }}
+            env:
+              - name: WORDPRESS_DB_HOST
+                value: 127.0.0.1
+              - name: WORDPRESS_DB_USER
+                value: {{ .Values.woocommerce.db.user }}
+              - name: WORDPRESS_DB_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.store.name }}-db-secret
+                    key: mariadb-password
+              - name: WORDPRESS_DB_NAME
+                value: {{ .Values.woocommerce.db.name }}
+            ports:
+              - containerPort: 80
+                name: wordpress
+            volumeMounts:
+              - name: secret-volume
+                mountPath: /etc/secret-volume
+                readOnly: true
+            # Startup Probe: Give it 10 mins, allow 5s per check
+            startupProbe:
+              httpGet:
+                path: /wp-admin/install.php
+                port: 80
+              failureThreshold: 60
+              periodSeconds: 10
+              timeoutSeconds: 5
+            
+            readinessProbe:
+              httpGet:
+                path: /wp-admin/install.php
+                port: 80
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              timeoutSeconds: 5
+            livenessProbe:
+              httpGet:
+                path: /wp-admin/install.php
+                port: 80
+              initialDelaySeconds: 20
+              periodSeconds: 20
+              timeoutSeconds: 5
+            resources:
+              requests:
+                cpu: 500m
+                memory: 512Mi
+              limits:
+                cpu: 1000m
+                memory: 2048Mi
+
+          - name: mariadb
+            image: {{ .Values.woocommerce.db.image }}
+            env:
+              - name: MYSQL_ROOT_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.store.name }}-db-secret
+                    key: mariadb-root-password
+              - name: MYSQL_USER
+                value: {{ .Values.woocommerce.db.user }}
+              - name: MYSQL_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.store.name }}-db-secret
+                    key: mariadb-password
+              - name: MYSQL_DATABASE
+                value: {{ .Values.woocommerce.db.name }}
+            ports:
+              - containerPort: 3306
+                name: db
+            volumeMounts:
+              - name: db-data
+                mountPath: /var/lib/mysql
+            readinessProbe:
+              exec:
+                command: ["sh", "-c", "mysqladmin ping -u root -p$MYSQL_ROOT_PASSWORD"]
+              initialDelaySeconds: 20
+              periodSeconds: 10
+            livenessProbe:
+              exec:
+                command: ["sh", "-c", "mysqladmin ping -u root -p$MYSQL_ROOT_PASSWORD"]
+              initialDelaySeconds: 30
+              periodSeconds: 20
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.store.name }}-db-pvc
+        - name: secret-volume
+          secret:
+            secretName: {{ .Values.store.name }}-db-secret
 {{- end }}

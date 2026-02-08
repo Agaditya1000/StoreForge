@@ -159,15 +159,9 @@ function App() {
 
               <div style={{ marginBottom: '2rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Engine</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <label style={{ cursor: 'pointer' }}>
-                    <input type="radio" name="engine" value="woocommerce" defaultChecked style={{ marginRight: '0.5rem' }} />
-                    WooCommerce
-                  </label>
-                  <label style={{ cursor: 'pointer' }}>
-                    <input type="radio" name="engine" value="medusa" style={{ marginRight: '0.5rem' }} />
-                    MedusaJS
-                  </label>
+                <input type="hidden" name="engine" value="woocommerce" />
+                <div style={{ color: 'var(--text-primary)', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+                  WooCommerce (WordPress + WooCommerce)
                 </div>
               </div>
 

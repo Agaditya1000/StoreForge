@@ -38,8 +38,9 @@ app.post('/api/stores', async (req, res) => {
     }
 
     // Basic validation
-    if (!['woocommerce', 'medusa'].includes(engine)) {
-        return res.status(400).json({ error: 'Invalid engine' });
+    // Basic validation
+    if (engine !== 'woocommerce') {
+        return res.status(400).json({ error: 'Only WooCommerce is supported' });
     }
 
     console.log(`Provisioning store: ${name} (${engine})`);

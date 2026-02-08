@@ -4,6 +4,8 @@ metadata:
   name: {{ .Values.store.name }}
   labels:
     app: {{ .Values.store.name }}
+    tier: frontend
+    store.engine: {{ .Values.store.engine }}
 spec:
   ports:
     - port: 80

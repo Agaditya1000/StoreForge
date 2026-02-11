@@ -12,7 +12,7 @@
 ingress:
   enabled: true
   className: "traefik" # Default for k3s
-  host: "store.example.com" # Change to your real domain
+  host: "store.prod.com" # Change to your real domain
 
 persistence:
   enabled: true

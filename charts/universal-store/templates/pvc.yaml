@@ -1,5 +1,22 @@
-kind: PersistentVolumeClaim
+{{- if .Values.persistence.enabled }}
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.store.name }}-wp-pvc
+  labels:
+    app: {{ .Values.store.name }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+  {{- if .Values.persistence.storageClass }}
+  storageClassName: {{ .Values.persistence.storageClass }}
+  {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: {{ .Values.store.name }}-db-pvc
   labels:
@@ -9,4 +26,8 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: {{ .Values.persistence.size }}
+  {{- if .Values.persistence.storageClass }}
+  storageClassName: {{ .Values.persistence.storageClass }}
+  {{- end }}
+{{- end }}

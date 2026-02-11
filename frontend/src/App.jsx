@@ -24,7 +24,7 @@ function App() {
 
   useEffect(() => {
     fetchStores();
-    const interval = setInterval(fetchStores, 5000); // Polling for status updates
+    const interval = setInterval(fetchStores, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -51,7 +51,7 @@ function App() {
 
       await fetchStores();
       setIsModalOpen(false);
-      e.target.reset(); // Reset form
+      e.target.reset();
     } catch (err) {
       alert(err.message);
     } finally {
@@ -60,7 +60,7 @@ function App() {
   };
 
   const handleDelete = async (name) => {
-    if (!confirm(`Are you sure you want to delete ${name}? This cannot be undone.`)) return;
+    if (!confirm(`Are you sure you want to delete "${name}"? All resources will be permanently removed.`)) return;
 
     try {
       const res = await fetch(`${API_URL}/stores/${name}`, { method: 'DELETE' });
@@ -71,67 +71,113 @@ function App() {
     }
   };
 
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'Ready': return 'status-ready';
+      case 'Failed': return 'status-failed';
+      default: return 'status-provisioning';
+    }
+  };
+
+  const storeCount = stores.length;
+  const readyCount = stores.filter(s => s.status === 'Ready').length;
+  const provisioningCount = stores.filter(s => s.status === 'Provisioning').length;
+
   return (
     <div className="app">
       <header className="header">
-        <div className="logo">StoreForge</div>
+        <div className="header-left">
+          <div className="logo">
+            <span className="logo-icon">⚡</span> StoreForge
+          </div>
+          <div className="stats-bar">
+            <span className="stat">
+              <span className="stat-value">{storeCount}</span> Total
+            </span>
+            <span className="stat-divider">|</span>
+            <span className="stat stat-ready">
+              <span className="stat-dot dot-ready"></span>
+              <span className="stat-value">{readyCount}</span> Ready
+            </span>
+            {provisioningCount > 0 && (
+              <>
+                <span className="stat-divider">|</span>
+                <span className="stat stat-prov">
+                  <span className="stat-dot dot-prov"></span>
+                  <span className="stat-value">{provisioningCount}</span> Provisioning
+                </span>
+              </>
+            )}
+          </div>
+        </div>
         <button className="btn" onClick={() => setIsModalOpen(true)}>
           + New Store
         </button>
       </header>
 
       {error && (
-        <div style={{ color: 'var(--danger)', marginBottom: '1rem', padding: '1rem', border: '1px solid var(--danger)', borderRadius: '8px' }}>
-          {error}
+        <div className="error-banner">
+          <span>⚠️</span> {error}
         </div>
       )}
 
       <div className="grid">
         {stores.map((store) => (
           <div key={store.name} className="glass-panel store-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div className="card-header">
               <div>
-                <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.25rem' }}>{store.name}</h3>
-                <p style={{ margin: '0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                  Engine: <strong style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{store.Labels?.['store.engine'] || 'Unknown'}</strong>
+                <h3 className="store-name">{store.name}</h3>
+                <p className="store-engine">
+                  Engine: <strong>{store.engine || 'woocommerce'}</strong>
                 </p>
               </div>
-              <span className={`status-badge ${store.status === 'deployed' ? 'status-ready' : 'status-provisioning'}`}>
+              <span className={`status-badge ${getStatusClass(store.status)}`}>
+                {store.status === 'Provisioning' && <span className="spinner"></span>}
                 {store.status}
               </span>
             </div>
 
-            <div style={{ marginTop: '2rem' }}>
-              {store.status === 'deployed' && (
-                <a
-                  href={`http://${store.name}.local`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-secondary"
-                  style={{ display: 'block', textAlign: 'center', marginBottom: '1rem', textDecoration: 'none' }}
-                >
-                  Open Dashboard ↗
+            <div className="store-urls">
+              <div className="url-row">
+                <span className="url-label">Store</span>
+                <a href={store.url} target="_blank" rel="noreferrer" className="url-link">
+                  {store.url} ↗
                 </a>
-              )}
-              <button
-                className="btn btn-danger"
-                style={{ width: '100%' }}
-                onClick={() => handleDelete(store.name)}
-              >
-                Delete Store
-              </button>
+              </div>
+              <div className="url-row">
+                <span className="url-label">Admin</span>
+                <a href={store.adminUrl} target="_blank" rel="noreferrer" className="url-link">
+                  {store.adminUrl} ↗
+                </a>
+              </div>
             </div>
 
-            <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Updated: {new Date(store.updated).toLocaleString()}
+            {store.status === 'Ready' && (
+              <div className="store-creds">
+                <span className="creds-label">Admin Login:</span>
+                <code>admin / admin123</code>
+              </div>
+            )}
+
+            <div className="card-footer">
+              <div className="store-timestamp">
+                Created: {new Date(store.created).toLocaleString()}
+              </div>
+              <button
+                className="btn btn-danger btn-sm"
+                onClick={() => handleDelete(store.name)}
+              >
+                Delete
+              </button>
             </div>
           </div>
         ))}
 
         {stores.length === 0 && !error && (
-          <div className="glass-panel" style={{ gridColumn: '1 / -1', padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+          <div className="glass-panel empty-state">
+            <div className="empty-icon">🏪</div>
             <h3>No stores yet</h3>
-            <p>Click "New Store" to provision your first e-commerce instance.</p>
+            <p>Click "+ New Store" to provision your first WooCommerce instance.</p>
           </div>
         )}
       </div>
@@ -139,38 +185,43 @@ function App() {
       {isModalOpen && (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}>
           <div className="glass-panel modal">
-            <h2 style={{ marginTop: 0 }}>Deploy New Store</h2>
+            <h2 className="modal-title">Deploy New Store</h2>
+            <p className="modal-subtitle">Provisions a full WooCommerce instance with database and ingress.</p>
             <form onSubmit={handleCreateStore}>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Store Name</label>
+              <div className="form-group">
+                <label className="form-label">Store Name</label>
                 <input
                   name="name"
                   className="input-field"
                   placeholder="my-awesome-shop"
-                  pattern="[a-z0-9-]+"
-                  title="Lowercase letters, numbers, and hyphens only"
+                  pattern="[a-z0-9][a-z0-9-]*[a-z0-9]"
+                  title="Lowercase letters, numbers, and hyphens. Must start/end with alphanumeric."
+                  minLength={3}
                   required
                   autoFocus
                 />
-                <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.25rem' }}>
-                  Used for URL: http://[name].local
+                <small className="form-hint">
+                  Store URL: <code>http://[name].local</code> &nbsp;|&nbsp; Min 3 characters, kebab-case
                 </small>
               </div>
 
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Engine</label>
-                <input type="hidden" name="engine" value="woocommerce" />
-                <div style={{ color: 'var(--text-primary)', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
-                  WooCommerce (WordPress + WooCommerce)
+              <div className="form-group">
+                <label className="form-label">Engine</label>
+                <div className="engine-option active">
+                  <input type="radio" name="engine" value="woocommerce" defaultChecked />
+                  <div>
+                    <strong>WooCommerce</strong>
+                    <small>WordPress + WooCommerce + Storefront Theme</small>
+                  </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setIsModalOpen(false)}>
+              <div className="form-actions">
+                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn" style={{ flex: 1 }} disabled={isLoading}>
-                  {isLoading ? ' provisioning...' : 'Create Store'}
+                <button type="submit" className="btn" disabled={isLoading}>
+                  {isLoading ? '⏳ Creating...' : '🚀 Create Store'}
                 </button>
               </div>
             </form>

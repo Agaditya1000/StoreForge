@@ -1,13 +1,22 @@
 # Production values for universal-store.
-# Use this with -f values-prod.yaml
+# Usage: helm install my-store ./charts/universal-store -f ./charts/universal-store/values-prod.yaml
+#
+# For secrets, pass via --set at install time:
+#   helm install my-store ./charts/universal-store \
+#     -f values-prod.yaml \
+#     --set woocommerce.db.rootPassword=<secret> \
+#     --set woocommerce.db.password=<secret>
+#
+# Or leave empty to auto-generate random credentials.
 
 ingress:
   enabled: true
   className: "traefik" # Default for k3s
-  host: "store.example.com" # Change this to real domain
+  host: "store.example.com" # Change to your real domain
 
 persistence:
   enabled: true
+  size: 5Gi
   storageClass: "local-path" # Default for k3s
 
 resources:
@@ -17,12 +26,3 @@ resources:
   limits:
     cpu: 1000m
     memory: 2Gi
-
-woocommerce:
-  db:
-    rootPassword: "CHANGE_ME_IN_PROD"
-    password: "CHANGE_ME_IN_PROD"
-
-medusa:
-  postgres:
-    password: "CHANGE_ME_IN_PROD"

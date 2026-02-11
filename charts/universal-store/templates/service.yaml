@@ -9,7 +9,7 @@ metadata:
 spec:
   ports:
     - port: 80
-      targetPort: {{ if eq .Values.store.engine "woocommerce" }}80{{ else }}9000{{ end }}
+      targetPort: 80
       protocol: TCP
   selector:
     app: {{ .Values.store.name }}

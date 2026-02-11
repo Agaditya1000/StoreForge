@@ -1,10 +1,10 @@
 # Default values for universal-store.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# Designed for local Kubernetes (Kind / Minikube).
+# Override with values-prod.yaml for production (k3s / VPS).
 
 store:
   name: my-store
-  engine: woocommerce # or medusa
+  engine: woocommerce
 
 ingress:
   enabled: true
@@ -14,31 +14,24 @@ ingress:
 persistence:
   enabled: true
   size: 1Gi
-  storageClass: "standard" # Change to 'local-path' or similar for Kind/k3s if needed
+  storageClass: "standard" # Minikube default. Use 'local-path' for k3s.
 
 resources:
   requests:
-    cpu: 250m
-    memory: 512Mi
+    cpu: 100m
+    memory: 128Mi
   limits:
     cpu: 500m
-    memory: 1024Mi
+    memory: 512Mi
 
-# WooCommerce Specifics
+# WooCommerce Configuration
 woocommerce:
   image: wordpress:6.4-php8.1-apache
   db:
     image: mariadb:10.6
-    rootPassword: "somesecretpassword" # In prod, use secrets!
+    # Credentials are auto-generated via Kubernetes Secrets if left empty.
+    # To override, pass via --set or use an external secret manager in production.
+    rootPassword: ""
     name: wordpress
     user: wordpress
-    password: wordpress_password
-
-# Medusa Specifics
-medusa:
-  image: medusajs/medusa-starter-default:latest
-  redis:
-    image: redis:6-alpine
-  postgres:
-    image: postgres:14-alpine
-    password: postgres_password
+    password: ""

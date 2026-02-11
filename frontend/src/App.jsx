@@ -211,7 +211,7 @@ function App() {
                   <input type="radio" name="engine" value="woocommerce" defaultChecked />
                   <div>
                     <strong>WooCommerce</strong>
-                    <small>WordPress + WooCommerce + Storefront Theme</small>
+                    <small>WordPress + WooCommerce</small>
                   </div>
                 </div>
               </div>
